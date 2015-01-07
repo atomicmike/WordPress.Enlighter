@@ -35,6 +35,7 @@ if (version_compare(phpversion(), '5.3', '>=')){
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/ResourceLoader.php');
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/SimpleTemplate.php');
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/CacheManager.php');
+	require_once(ENLIGHTER_PLUGIN_PATH.'/class/LanguageManager.php');
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/ThemeGenerator.php');
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/ThemeManager.php');
 	require_once(ENLIGHTER_PLUGIN_PATH.'/class/TinyMCE.php');

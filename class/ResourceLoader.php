@@ -31,18 +31,24 @@ class ResourceLoader{
 	// CDN location list
 	public static $cdnLocations = array();
 	
+	// list of external language
+	private $_languageManager;
+	
 	// list of external themes
 	private $_themeManager;
 	
-	public function __construct($settingssUtil, $themeManager, $languageKeys){
+	public function __construct($settingssUtil, $languageManager, $themeManager, $languageKeys){
 		// store local plugin config
 		$this->_config = $settingssUtil->getOptions();
 		
-		// store language keys
-		$this->_languageKeys = $languageKeys;
+		// local theme manager instance (required for external themes)
+		$this->_languageManager = $languageManager;
 		
 		// local theme manager instance (required for external themes)
 		$this->_themeManager = $themeManager;
+		
+		// store language keys
+		$this->_languageKeys = array_merge($languageKeys, $this->_languageManager->getUserLanguageKeys());
 		
 		// initialize cdn locations
 		self::$cdnLocations['mootools-local'] = plugins_url('/enlighter/resources/mootools-core-1.5.1-full-nocompat-yc.js');
@@ -180,6 +186,11 @@ class ResourceLoader{
 			wp_register_script('enlighter-config', plugins_url('/enlighter/cache/EnlighterJS.init.js'), array('enlighter-local'));
 			wp_enqueue_script('enlighter-config');
 		}
+		
+		foreach ($this->_languageManager->getUserLanguages() as $language => $sources){
+			wp_register_script('enlighter-external-'.strtolower($language), $sources[1]);
+			wp_enqueue_script('enlighter-external-'.strtolower($language));
+		}
 	}
 	
 	public function appendTinyMceCSS($mce_css){
@@ -189,6 +200,15 @@ class ResourceLoader{
 		}else{
 			return $mce_css .= ','.plugins_url('/enlighter/resources/admin/TinyMCE.css');
 		}
+		// TODO: Find a way to append this:
+		/*
+		foreach ($this->_languageManager->getUserLanguages() as $language => $sources){
+			pre.EnlighterJSRAW[data-enlighter-language="$language"]:before{
+				content: "Enlighter: $sources[2]";
+			}
+		}
+		*/
+		
 	}
 	
 	public function appendTinyMceJS($mce_plugins){

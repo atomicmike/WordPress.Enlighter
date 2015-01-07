@@ -36,6 +36,9 @@ class Enlighter{
 	// cahce manager instance
 	private $_cacheManager;
 	
+	// language loader/manager
+	private $_languageManager;
+	
 	// theme loader/manager
 	private $_themeManager;
 	
@@ -164,7 +167,7 @@ class Enlighter{
 	
 	// get available languages
 	public static function getAvailableLanguages(){
-		return self::getInstance()->_supportedLanguageKeys;
+		return array_merge(self::getInstance()->_supportedLanguageKeys, self::getInstance()->_languageManager->getUserLanguageKeys());
 	}
 	
 	// get available themes
@@ -188,6 +191,9 @@ class Enlighter{
 		// create new cache manager instance
 		$this->_cacheManager = new Enlighter\CacheManager($this->_settingsUtility);
 		
+		// loader to fetch user languages
+		$this->_languageManager = new Enlighter\LanguageManager($this->_cacheManager);
+		
 		// loader to fetch user themes
 		$this->_themeManager = new Enlighter\ThemeManager($this->_cacheManager);
 
@@ -196,8 +202,10 @@ class Enlighter{
 			load_plugin_textdomain('enlighter', null, 'enlighter/lang/');
 		}
 		
+		$allLanguageKeys = array_merge($this->_supportedLanguageKeys, $this->_languageManager->getUserLanguageKeys());
+		
 		// create new resource loader
-		$this->_resourceLoader = new Enlighter\ResourceLoader($this->_settingsUtility, $this->_themeManager, $this->_supportedLanguageKeys);
+		$this->_resourceLoader = new Enlighter\ResourceLoader($this->_settingsUtility, $this->_languageManager, $this->_themeManager, $this->_supportedLanguageKeys);
 		
 		// create new theme generator instance
 		$this->_themeGenerator = new Enlighter\ThemeGenerator($this->_settingsUtility, $this->_cacheManager);
@@ -211,10 +219,13 @@ class Enlighter{
 			$this->_resourceLoader->backend();		
 
 			// force theme cache reload
+			$this->_languageManager->forceReload();
+
+			// force theme cache reload
 			$this->_themeManager->forceReload();
 		}else{
 			// create new shortcode handler, register all used shortcodes
-			$this->_shortcodeHandler = new Enlighter\ShortcodeHandler($this->_settingsUtility, array_merge($this->_supportedLanguageKeys, array('enlighter', 'codegroup')));
+			$this->_shortcodeHandler = new Enlighter\ShortcodeHandler($this->_settingsUtility, array_merge($allLanguageKeys, array('enlighter', 'codegroup')));
 			
 			// add shotcode handlers
 			add_shortcode('enlighter', array($this->_shortcodeHandler, 'genericShortcodeHandler'));
@@ -222,7 +233,7 @@ class Enlighter{
 			
 			// enable language shortcodes ?
 			if ($this->_settingsUtility->getOption('languageShortcode')){
-				foreach ($this->_supportedLanguageKeys as $lang){
+				foreach ($allLanguageKeys as $lang){
 					add_shortcode($lang, array($this->_shortcodeHandler, 'microShortcodeHandler'));
 				}
 			}
